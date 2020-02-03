@@ -21,7 +21,7 @@ class BasicModel(nn.Module):
     def __init__(self, input_size, layer_sizes):
         super(BasicModel, self).__init__()
 
-        # Making layer sizes attributes of the class
+        # Making layer sizes attributes of the class.
         self.input_size = input_size
         self.layer_sizes = layer_sizes
         # Parameter to make a for and construct the remaining layers
