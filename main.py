@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     pcs = multi_training.loadPieces("music")
 
-    m = model.Model([300, 300], [100, 50])
+    m = model.BiaxialRNNModel([300, 300], [100, 50])
     m.cuda()
 
     multi_training.trainPiece(m, pcs, 2)
