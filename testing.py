@@ -62,9 +62,7 @@ def test_predict_n_step_model():
     print(model)
 
     out = model(data, 5)
-
-    for i in out:
-        print(i)
+    print(out)
 
 
 def main():

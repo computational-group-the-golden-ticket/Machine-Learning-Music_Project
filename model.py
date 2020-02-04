@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from data import noteStateSingleToInputForm
+
 
 class BasicModel(nn.Module):
     """
@@ -251,7 +253,7 @@ class BiaxialRNNModel(nn.Module):
         hidden_time = self.time_model(input_mat)
 
         last_note_values = torch.Tensor([0, 0])
-        next_note_step = [[0, 0]]
+        next_notes_step = [[0, 0]]
         for i in range(hidden_time.shape[1]):
             note_input = torch.cat([hidden_time[0][i], last_note_values])
             note_input = torch.unsqueeze(note_input, dim=0)
@@ -260,9 +262,9 @@ class BiaxialRNNModel(nn.Module):
             probabilities = self.pitch_model(note_input)
             last_note_values = self.pitch_model.probabilities2notes(probabilities[0][0])
 
-            next_note_step.append([last_note_values[0], last_note_values[1]])
+            next_notes_step.append([last_note_values[0].long().item(), last_note_values[1].long().item()])
 
-        return torch.Tensor(next_note_step)
+        return next_notes_step
 
     def predict_n_steps(self, x, n):
         note_state_matrix = []
@@ -272,6 +274,9 @@ class BiaxialRNNModel(nn.Module):
             last_step = self.predict_one_step(last_step)
 
             note_state_matrix.append(last_step)
+
+            last_step = noteStateSingleToInputForm(last_step, i)
+            last_step = torch.Tensor(last_step)
 
         return note_state_matrix
 
