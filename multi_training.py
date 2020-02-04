@@ -82,7 +82,8 @@ def train(model, pieces):
     #  minimized; "sum" option sums all the components of the tensor into a
     #  scalar.
     # loss_function = torch.nn.MSELoss(reduction='sum')
-    loss_function = torch.nn.NLLLoss(reduction='sum')
+    # loss_function = torch.nn.NLLLoss(reduction='sum')
+    loss_function = torch.nn.BCELoss(reduction='sum')
     # loss_function = torch.nn.functional.nll_loss
     # loss_function = NLLLoss.apply
 
@@ -111,6 +112,7 @@ def train(model, pieces):
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
     #   expected probabilities are passed as second parameter.
+    print(output.shape, output_mat.shape)
     loss = loss_function(output.long(), output_mat.long())
     loss.backward()
     optimizer.step()
