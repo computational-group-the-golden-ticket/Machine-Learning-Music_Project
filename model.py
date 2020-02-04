@@ -127,7 +127,7 @@ class PitchModel(BasicModel):
         # This call the forward specified in BasicModel.
         last_output = super(PitchModel, self).forward(x, *args, **kwargs)
         # This apply the last 2 dim layer.
-        last_output = torch.sigmoid(self.linear(last_output))
+        last_output = torch.nn.LogSigmoid(self.linear(last_output))
 
         return last_output
 
