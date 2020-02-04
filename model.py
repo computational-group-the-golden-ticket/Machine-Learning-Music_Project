@@ -190,8 +190,8 @@ class BiaxialRNNModel(nn.Module):
         #  occupies in the bar and other info.
         input_mat, output_mat = x
 
-        input_mat.requires_grad = True
-        output_mat.requires_grad = True
+        # input_mat.requires_grad = True
+        # output_mat.requires_grad = True
 
         # The last info in time dimension is eliminated, as each data in the
         #   matrix (time, batch, number_notes, features) try to predic the next
@@ -286,6 +286,7 @@ class BiaxialRNNModel(nn.Module):
         return note_state_matrix
 
     def forward(self, x, n=1, training=False):
+        print(training)
         if training:
             return self.train(x)
         else:

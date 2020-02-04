@@ -2,7 +2,7 @@ import os
 import random
 from midi_to_statematrix import *
 from data import *
-
+import numpy
 import signal
 
 import torch
@@ -112,10 +112,11 @@ def train(model, pieces):
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
     #   expected probabilities are passed as second parameter.
-    print(output.shape, output_mat.shape)
-    loss = loss_function(output.long(), output_mat.long())
+    loss = loss_function((output, output_mat))
+    # loss = loss_function(output.long(), output_mat.long())
     loss.backward()
     optimizer.step()
+    print('here')
 
     return loss
 
@@ -146,7 +147,8 @@ def trainPiece(model, pieces, epochs, start=0):
             #  is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), model(batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
+            noteStateMatrixTomidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0)
+                , model(batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
 
             # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
