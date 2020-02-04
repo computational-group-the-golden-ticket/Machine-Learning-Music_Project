@@ -14,19 +14,28 @@ division_len = 16  # interval between possible start locations
 
 def loadPieces(dirpath):
 
+    # Make a dicitonary to load all pieces
     pieces = {}
 
+    # For over the file in  driectory to verify if they are midi files
     for fname in os.listdir(dirpath):
+        # I not midi file try with the next
         if fname[-4:] not in ('.mid', '.MID'):
             continue
 
+        # Save name without .mid termination
         name = fname[:-4]
 
+        # Transform the midi song to data as indicated in
+        #   midiToNoteStateMatrix in midi_to_statematrix.py
         outMatrix = midiToNoteStateMatrix(os.path.join(dirpath, fname))
+        # If this is not the case, it is upload because it has several possible
+        #   examples
         if len(outMatrix) < batch_len:
             continue
-
         pieces[name] = outMatrix
+
+        # Load info
         print("Loaded {}".format(name))
 
     return pieces
