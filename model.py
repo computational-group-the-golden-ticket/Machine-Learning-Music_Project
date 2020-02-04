@@ -3,9 +3,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-# Impor modules for training
-import multi_training
-
 
 class BasicModel(nn.Module):
     """

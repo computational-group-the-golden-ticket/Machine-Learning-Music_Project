@@ -7,9 +7,13 @@ import signal
 
 import torch
 
-batch_width = 10  # number of sequences in a batch
-batch_len = 16 * 8  # length of each sequence
-division_len = 16  # interval between possible start locations
+# Number of examples to be sampled in the minimization.
+batch_width = 10
+# Length of each sequence; the batch are desired to contain 8 bars.
+batch_len = 16 * 8
+# Interval between possible start locations; this is the number of notes that
+#   can be resolved in a bar.
+division_len = 16
 
 
 def loadPieces(dirpath):
@@ -42,33 +46,56 @@ def loadPieces(dirpath):
 
 
 def getPieceSegment(pieces):
+    # Choose a piece uploaded; all the pieces are assign with the same
+    #   probability.
     piece_output = random.choice(list(pieces.values()))
+    # Choose a inintial position in a random bar.
     start = random.randrange(0, len(piece_output) - batch_len, division_len)
-
+    # Take a segment of batch_len size; this represent batch_len times
+    #   the duration of the shortest possible note.
     seg_out = piece_output[start:start + batch_len]
+    # This will change the last dimension of seg_out in order to give to each
+    #  note context about the notes played and hold in the surrounding times
+    #  as well as other parameters.
     seg_in = noteStateMatrixToInputForm(seg_out)
 
     return seg_in, seg_out
 
 
 def getPieceBatch(pieces):
+    # The input and oputut are copied in a a tuple, each batch_width times in
+    #   the following way i = (seg_in, ..., seg_in) and o = (seg_out, ....,
+    #   seg_out)
     i, o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
     return torch.Tensor(i), torch.Tensor(o)
 
 
 def train(model, pieces):
+    # This implemnes the Negative log likelihood function in order to be
+    #  minimized; "sum" option sums all the components of the tensor into a
+    #  scalar.
     loss_function = torch.nn.NLLLoss(reduction='sum')
-    # optimizer = torch.optim.Adam(model.parameters())
 
+    # The problem adapt well to the benefits that are refered in (Adam et. al.,
+    #   2015). Between them it is the fact that is good for non-stationary
+    #   as will be expected for this type of problem, in which changing a note
+    #   can produce models with the same quality.
+    optimizer = torch.optim.Adam(model.parameters())
+
+    # Get a part of the song, for more details see the function.
     input_mat, output_mat = getPieceBatch(pieces)
 
+    # Run forward model for the data
     output = model((input_mat.cuda(), output_mat.cuda()))
 
-    print(output_mat[:, 1:].shape, output.shape)
-    loss = loss_function(output.long().cuda(), output_mat[:, 1:].long().cuda())
+    # print(output_mat[:, 1:].shape, output.shape)
 
+    # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
+    #   pass to long, this ony works for long. Prediction is passed first,
+    #   expected probabilities are passed as second parameter.
+    loss = loss_function(output.long().cuda(), output_mat[:, 1:].long().cuda())
     loss.backward()
-    # optimizer.step()
+    optimizer.step()
 
     return loss
 
@@ -85,17 +112,24 @@ def trainPiece(model, pieces, epochs, start=0):
         if stopflag[0]:
             break
 
+        # Making the training for each epoch
         error = train(model, pieces)
-        error = 0
+
+        # Each 100 epochs print the error
         if i % 100 == 0:
             print("epoch {}, error={}".format(i, error))
 
+        # This saves the model each 100 if less than 1000 epochs and 500 epochs
+        #   after this
         if i % 500 == 0 or (i % 100 == 0 and i < 1000):
+            # This Choose the seed for the predcition to see later how the net
+            #  is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
             # noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), model.predict_fun(
             #     batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
 
+            # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
 
     signal.signal(signal.SIGINT, old_handler)
