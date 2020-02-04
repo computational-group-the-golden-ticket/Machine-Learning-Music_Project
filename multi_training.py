@@ -105,8 +105,8 @@ def train(model, pieces):
 
     output_mat = output_mat[:, 1:]
 
-    output = output.reshape((-1, 2))
-    output_mat = output_mat.reshape((-1, 2))
+    output = output.reshape((-1, 1))
+    output_mat = output_mat.reshape((-1, 1))
 
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
