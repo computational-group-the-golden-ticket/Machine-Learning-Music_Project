@@ -103,12 +103,15 @@ def train(model, pieces):
 
     output = mask * output
 
-    # print(output_mat[:, 1:].shape, output.shape)
+    output_mat = output_mat[:, 1:]
+
+    output = output.reshape((-1, 2))
+    output_mat = output_mat.reshape((-1, 2))
 
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
     #   expected probabilities are passed as second parameter.
-    loss = loss_function(output.long(), output_mat[:, 1:].long())
+    loss = loss_function(output.long(), output_mat.long())
     loss.backward()
     optimizer.step()
 
