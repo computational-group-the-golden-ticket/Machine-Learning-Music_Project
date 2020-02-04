@@ -1,6 +1,9 @@
 # Import standart libraries for ML
 import torch
 import torch.nn as nn
+import numpy as np
+
+from data import noteStateSingleToInputForm
 
 
 class BasicModel(nn.Module):
@@ -111,6 +114,14 @@ class PitchModel(BasicModel):
         # This is the two layer size that was mentioned.
         self.linear = nn.Linear(self.layer_sizes[-1], 2)
 
+    def probabilities2notes(self, x):
+        threshold = np.random.rand()
+
+        shouldPlay = threshold < x[0]
+        shouldArtic = shouldPlay * (threshold < x[1])
+
+        return torch.Tensor([shouldPlay, shouldArtic])
+
     def forward(self, x, *args, **kwargs):
         # This call the forward specified in BasicModel.
         last_output = super(PitchModel, self).forward(x, *args, **kwargs)
@@ -162,7 +173,7 @@ class BiaxialRNNModel(nn.Module):
         self.pitch_model = PitchModel(self.time_model.layer_sizes[-1] + 2,
                                       p_layer_sizes)
 
-    def forward(self, x):
+    def train(self, x):
         """
         This forward is basicaly the implmentation on detail of what was said
           in te description of the class.
@@ -235,6 +246,45 @@ class BiaxialRNNModel(nn.Module):
             (n_note, n_batch, n_time, 2)).permute(1, 2, 0, 3)
 
         return last_output
+
+    def predict_one_step(self, x):
+        input_mat = torch.unsqueeze(x, dim=0)
+
+        hidden_time = self.time_model(input_mat)
+
+        last_note_values = torch.Tensor([0, 0])
+        next_notes_step = [[0, 0]]
+        for i in range(hidden_time.shape[1]):
+            note_input = torch.cat([hidden_time[0][i], last_note_values])
+            note_input = torch.unsqueeze(note_input, dim=0)
+            note_input = torch.unsqueeze(note_input, dim=0)
+
+            probabilities = self.pitch_model(note_input)
+            last_note_values = self.pitch_model.probabilities2notes(probabilities[0][0])
+
+            next_notes_step.append([last_note_values[0].long().item(), last_note_values[1].long().item()])
+
+        return next_notes_step
+
+    def predict_n_steps(self, x, n):
+        note_state_matrix = []
+
+        last_step = x
+        for i in range(n):
+            last_step = self.predict_one_step(last_step)
+
+            note_state_matrix.append(last_step)
+
+            last_step = noteStateSingleToInputForm(last_step, i)
+            last_step = torch.Tensor(last_step)
+
+        return note_state_matrix
+
+    def forward(self, x, n=1, training=False):
+        if training:
+            return self.train(x)
+        else:
+            return self.predict_n_steps(x, n=n)
 
 
 def main():

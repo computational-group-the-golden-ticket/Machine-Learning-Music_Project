@@ -86,7 +86,12 @@ def train(model, pieces):
     input_mat, output_mat = getPieceBatch(pieces)
 
     # Run forward model for the data
-    output = model((input_mat.cuda(), output_mat.cuda()))
+    output = model((input_mat.cuda(), output_mat.cuda()), training=True)
+
+    active_notes = torch.unsqueeze(output_mat[:, 1:, :, 0], dim=3)
+    mask = torch.cat([torch.ones_like(active_notes), active_notes])
+
+    output = mask * output
 
     # print(output_mat[:, 1:].shape, output.shape)
 
@@ -126,8 +131,7 @@ def trainPiece(model, pieces, epochs, start=0):
             #  is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            # noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), model.predict_fun(
-            #     batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
+            noteStateMatrixToMidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0), model(batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
 
             # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
