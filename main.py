@@ -42,10 +42,10 @@ def fetch_train_thoughts(m, pcs, batches, name="trainthoughts"):
 
 if __name__ == '__main__':
 
-    pcs = multi_training.loadPieces("music")
+    pcs = multi_training.loadPieces("Train_data/")
 
     m = model.BiaxialRNNModel([300, 300], [100, 50])
-    m.cuda()
+    # m.cuda()
 
     multi_training.trainPiece(m, pcs, 2)
 
