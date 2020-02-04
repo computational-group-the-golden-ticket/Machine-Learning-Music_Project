@@ -47,8 +47,8 @@ def noteInputForm(note, state, context, beat):
 
     part_context = context[pitchclass:] + context[:pitchclass]
 
-    return (part_position + part_pitchclass + part_prev_vicinity /
-            + part_context + beat + [0])
+    return (part_position + part_pitchclass + part_prev_vicinity +
+            part_context + beat + [0])
 
 
 def noteStateSingleToInputForm(state, time):
