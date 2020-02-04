@@ -55,7 +55,8 @@ class BasicModel(nn.Module):
             #  for better backprop behaviour.
             # The first parameter is one beacuse the stack initialization is
             #  made for each latyer indiviaully.
-            hidden_state = torch.randn(1, batch_size, self.layer_sizes[i])
+            hidden_state = torch.randn(1, batch_size, self.layer_sizes[i],
+                                       requires_grad=True)
 
             # If cuda paralelization option is on, then use it.
             if to_cuda:
@@ -189,6 +190,9 @@ class BiaxialRNNModel(nn.Module):
         #  occupies in the bar and other info.
         input_mat, output_mat = x
 
+        input_mat.requires_grad = True
+        output_mat.requires_grad = True
+
         # The last info in time dimension is eliminated, as each data in the
         #   matrix (time, batch, number_notes, features) try to predic the next
         #   one, that is to say, time=0 predicts time=1, then, time=1 predicts
@@ -219,7 +223,8 @@ class BiaxialRNNModel(nn.Module):
         # The last note try to modelate the next, and for the first note
         #  the only thing that we have is silence, then a silence note
         #  is added.
-        start_note_values = torch.zeros(1, last_output.shape[1], 2)
+        start_note_values = torch.zeros(1, last_output.shape[1], 2,
+                                        requires_grad=False)
 
         # This is the matrix that represents the notes to be predicted. The
         #   last dim in note is erased again thanks to the fact that that this

@@ -70,11 +70,21 @@ def getPieceBatch(pieces):
     return torch.Tensor(i), torch.Tensor(o)
 
 
+def NLLLoss(source, target):
+    loss = 2 * source * target - source - target + 1 + 1e-14
+    loss = -torch.sum(torch.log(loss))
+
+    return loss
+
+
 def train(model, pieces):
     # This implemnes the Negative log likelihood function in order to be
     #  minimized; "sum" option sums all the components of the tensor into a
     #  scalar.
+    # loss_function = torch.nn.MSELoss(reduction='sum')
     loss_function = torch.nn.NLLLoss(reduction='sum')
+    # loss_function = torch.nn.functional.nll_loss
+    # loss_function = NLLLoss.apply
 
     # The problem adapt well to the benefits that are refered in (Adam et. al.,
     #   2015). Between them it is the fact that is good for non-stationary
@@ -86,10 +96,10 @@ def train(model, pieces):
     input_mat, output_mat = getPieceBatch(pieces)
 
     # Run forward model for the data
-    output = model((input_mat.cuda(), output_mat.cuda()), training=True)
+    output = model((input_mat, output_mat), training=True)
 
     active_notes = torch.unsqueeze(output_mat[:, 1:, :, 0], dim=3)
-    mask = torch.cat([torch.ones_like(active_notes), active_notes])
+    mask = torch.cat([torch.ones_like(active_notes), active_notes], dim=3)
 
     output = mask * output
 
@@ -98,7 +108,7 @@ def train(model, pieces):
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
     #   expected probabilities are passed as second parameter.
-    loss = loss_function(output.long().cuda(), output_mat[:, 1:].long().cuda())
+    loss = loss_function(output.long(), output_mat[:, 1:].long())
     loss.backward()
     optimizer.step()
 
