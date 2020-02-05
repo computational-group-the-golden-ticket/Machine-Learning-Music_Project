@@ -112,11 +112,12 @@ def train(model, pieces):
     # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
     #   pass to long, this ony works for long. Prediction is passed first,
     #   expected probabilities are passed as second parameter.
-    loss = loss_function((output, output_mat))
+    output = output.reshape(output.shape[0])
+    output_mat = output_mat.reshape(output.shape[0])
+    loss = loss_function(output, output_mat)
     # loss = loss_function(output.long(), output_mat.long())
     loss.backward()
     optimizer.step()
-    print('here')
 
     return loss
 
@@ -143,12 +144,15 @@ def trainPiece(model, pieces, epochs, start=0):
         # This saves the model each 100 if less than 1000 epochs and 500 epochs
         #   after this
         if i % 500 == 0 or (i % 100 == 0 and i < 1000):
-            # This Choose the seed for the predcition to see later how the net
-            #  is doing.
+            # This Choose the seed for the predcition, and to make a
+            #   predicition to see how the net is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            noteStateMatrixTomidi(numpy.concatenate((numpy.expand_dims(xOpt[0], 0)
-                , model(batch_len, 1, xIpt[0])), axis=0), 'output/sample{}'.format(i))
+            init_notes = numpy.expand_dims(xOpt[0], 0)
+            predict_notes = model(xIpt[0], batch_len)
+            dummy_notes = (init_notes, predict_notes)
+            noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
+                                  'output/sample{}'.format(i))
 
             # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
