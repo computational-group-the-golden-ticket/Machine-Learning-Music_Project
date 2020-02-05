@@ -148,8 +148,15 @@ def trainPiece(model, pieces, epochs, start=0):
             #   predicition to see how the net is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            init_notes = numpy.expand_dims(xOpt[0], 0)
-            predict_notes = model(xIpt[0], batch_len)
+            # noteStateMatrixTomidi expect numpy array inputs
+            init_notes = xOpt[0].numpy()
+            predict_notes = model(xIpt[0], batch_len)  # Input is tensor, int
+            # predict_notes = numpy.array(predict_notes)
+            print(predict_notes)
+            exit()
+
+            print(init_notes.shape, predict_notes.shape)
+
             dummy_notes = (init_notes, predict_notes)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
                                   'output/sample{}'.format(i))

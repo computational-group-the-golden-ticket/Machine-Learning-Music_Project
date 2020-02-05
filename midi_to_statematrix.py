@@ -125,7 +125,6 @@ def noteStateMatrixTomidi(statematrix, name="example"):
     TODO: This is the inverse process that midiToNoteStateMatrix makes;
       comments to do.
     """
-    statematrix = statematrix.numpy()
     pattern = mido.MidiFile()
     track = mido.MidiTrack()
     pattern.tracks.append(track)
