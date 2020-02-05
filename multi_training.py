@@ -65,7 +65,7 @@ def getPieceSegment(pieces):
 def getPieceBatch(pieces):
     # The input and oputut are copied in a a tuple, each batch_width times in
     #   the following way i = (seg_in, ..., seg_in) and o = (seg_out, ....,
-    #   seg_out)
+    #   seg_out).
     i, o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
     return torch.Tensor(i), torch.Tensor(o)
 
@@ -116,6 +116,7 @@ def train(model, pieces):
     output_mat = output_mat.reshape(output.shape[0])
     loss = loss_function(output, output_mat)
     # loss = loss_function(output.long(), output_mat.long())
+
     loss.backward()
     optimizer.step()
 
@@ -149,13 +150,9 @@ def trainPiece(model, pieces, epochs, start=0):
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
             # noteStateMatrixTomidi expect numpy array inputs
-            init_notes = xOpt[0].numpy()
+            init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
             predict_notes = model(xIpt[0], batch_len)  # Input is tensor, int
-            # predict_notes = numpy.array(predict_notes)
-            print(predict_notes)
-            exit()
-
-            print(init_notes.shape, predict_notes.shape)
+            predict_notes = numpy.array(predict_notes)
 
             dummy_notes = (init_notes, predict_notes)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
