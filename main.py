@@ -46,6 +46,6 @@ if __name__ == '__main__':
 
     m = model.BiaxialRNNModel([300, 300], [100, 50])
 
-    multi_training.trainPiece(m, pcs, 2)
+    multi_training.trainPiece(m, pcs, 10000)
 
     # pickle.dump(m.learned_config, open("output/final_learned_config.p", "wb"))
