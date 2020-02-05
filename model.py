@@ -258,7 +258,7 @@ class BiaxialRNNModel(nn.Module):
         hidden_time = self.time_model(input_mat)
 
         last_note_values = torch.Tensor([0, 0])
-        next_notes_step = [[0, 0]]
+        next_notes_step = []  # list to append the new now generated
         for i in range(hidden_time.shape[1]):
             note_input = torch.cat([hidden_time[0][i], last_note_values])
             note_input = torch.unsqueeze(note_input, dim=0)
