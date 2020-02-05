@@ -267,7 +267,8 @@ class BiaxialRNNModel(nn.Module):
             probabilities = self.pitch_model(note_input)
             last_note_values = self.pitch_model.probabilities2notes(probabilities[0][0])
 
-            next_notes_step.append([last_note_values[0].long().item(), last_note_values[1].long().item()])
+            next_notes_step.append([last_note_values[0].long().item(),
+                                    last_note_values[1].long().item()])
 
         return next_notes_step
 
@@ -286,7 +287,6 @@ class BiaxialRNNModel(nn.Module):
         return note_state_matrix
 
     def forward(self, x, n=1, training=False):
-        print(training)
         if training:
             return self.train(x)
         else:
