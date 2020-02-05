@@ -47,11 +47,8 @@ def test_predict_one_step_model():
     model = m.BiaxialRNNModel([300, 300], [100, 50])
     print(model)
 
-    out = model(data)
-
-    print(out)
-
-
+    out = model(data)  # Done in order to print
+    
 def test_predict_n_step_model():
     pcs = multi_training.loadPieces("Train_data")
     data, _ = multi_training.getPieceSegment(pcs)
@@ -63,6 +60,7 @@ def test_predict_n_step_model():
 
     out = model(data, 5)
     print(out)
+    print(torch.Tensor(np.array(out)).shape)
 
 
 def main():
