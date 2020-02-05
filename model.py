@@ -204,7 +204,7 @@ class BiaxialRNNModel(nn.Module):
         n_batch, n_time, n_note, n_ipn = input_slice.shape
 
         # Permute and collapse the dimensions with n_time first to run the
-        #   RNN to find ouputs that contain the time connections.
+        #    RNN to find ouputs that contain the time connections.
         time_inputs = input_slice.permute((1, 0, 2, 3))
         time_inputs = time_inputs.reshape((n_time, n_batch * n_note, n_ipn))
 
