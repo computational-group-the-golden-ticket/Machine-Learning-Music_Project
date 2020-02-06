@@ -5,6 +5,8 @@ from midi_to_statematrix import *
 import multi_training
 import model
 
+import os
+
 
 def gen_adaptive(m, pcs, times, keep_thoughts=False, name="final"):
     xIpt, xOpt = map(lambda x: numpy.array(x, dtype='int8'),
@@ -40,9 +42,24 @@ def fetch_train_thoughts(m, pcs, batches, name="trainthoughts"):
     pickle.dump(all_thoughts, open('output/' + name + '.p', 'wb'))
 
 
+def get_last_epoch(model_directory):
+    # Get all file names in model_directory
+    files = [file for file in os.listdir(model_directory) if '.p' in file]
+    # Function that go over a string and create in a list all individual
+    #   numbers and then return all of them joined as a string.
+    get_number = (lambda string: "".join(list(filter(lambda c: c.isdigit(), string))))
+    # Map the get_number over all the names and return them as integers
+    epochs = list(map(lambda string: int(get_number(string)), files))
+    epochs.append(0)  # Append 0 in case of void list
+    return max(epochs)
+
+
 if __name__ == '__main__':
-    pcs = multi_training.loadPieces("Train_data")
+    model_directory = "output"
+    pcs = multi_training.loadPieces("Scale")
+
+    start = get_last_epoch(model_directory)
 
     m = model.BiaxialRNNModel([300, 300], [100, 50])
 
-    multi_training.trainPiece(m, pcs, 10000)
+    multi_training.trainPiece(m, pcs, 10000, "Scale", start)

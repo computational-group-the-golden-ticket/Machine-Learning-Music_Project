@@ -8,9 +8,9 @@ import signal
 import torch
 
 # Number of examples to be sampled in the minimization.
-batch_width = 10
+batch_width = 2
 # Length of each sequence; the batch are desired to contain 8 bars.
-batch_len = 16 * 8
+batch_len = 16 * 4
 # Interval between possible start locations; this is the number of notes that
 #   can be resolved in a bar.
 division_len = 16
@@ -123,13 +123,19 @@ def train(model, pieces):
     return loss
 
 
-def trainPiece(model, pieces, epochs, start=0):
+def trainPiece(model, pieces, epochs, music_type_dir, start=0):
     stopflag = [False]
 
     def signal_handler(signame, sf):
         stopflag[0] = True
 
     old_handler = signal.signal(signal.SIGINT, signal_handler)
+
+    # File to save iteration and loss done
+    file_to_save = "iter_vs_loss.txt"
+
+    save_output_dir = music_type_dir + "/output"
+    os.makedirs(save_output_dir, exist_ok=True)
 
     for i in range(start, start + epochs):
         if stopflag[0]:
@@ -138,6 +144,7 @@ def trainPiece(model, pieces, epochs, start=0):
         # Making the training for each epoch
         error = train(model, pieces)
 
+        append_data_to(file_to_save, [i, error])
         # Each 100 epochs print the error
         if i % 100 == 0:
             print("epoch {}, error={}".format(i, error))
@@ -154,11 +161,13 @@ def trainPiece(model, pieces, epochs, start=0):
             predict_notes = model(xIpt[0], batch_len)  # Input is tensor, int
             predict_notes = numpy.array(predict_notes)
 
+            # Save samples created in save_output_dir
             dummy_notes = (init_notes, predict_notes)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
-                                  'output/sample{}'.format(i))
+                                  save_output_dir + '/sample{}'.format(i))
 
-            # Save the model
-            torch.save(model.state_dict(), 'output/params{}.p'.format(i))
+            # Save the model with dummy name in save_output_dir
+            dummy_name = save_output_dir + '/params{}.p'.format(i)
+            torch.save(model.state_dict(), dummy_name)
 
     signal.signal(signal.SIGINT, old_handler)
