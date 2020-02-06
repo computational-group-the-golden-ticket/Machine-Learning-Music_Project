@@ -41,11 +41,8 @@ def fetch_train_thoughts(m, pcs, batches, name="trainthoughts"):
 
 
 if __name__ == '__main__':
-
     pcs = multi_training.loadPieces("Train_data")
 
     m = model.BiaxialRNNModel([300, 300], [100, 50])
 
     multi_training.trainPiece(m, pcs, 10000)
-
-    # pickle.dump(m.learned_config, open("output/final_learned_config.p", "wb"))
