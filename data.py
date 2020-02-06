@@ -65,3 +65,12 @@ def noteStateMatrixToInputForm(statematrix):
     inputform = [noteStateSingleToInputForm(state, time)
                  for time, state in enumerate(statematrix)]
     return inputform
+
+
+###########################################################################
+# Input output functions
+###########################################################################
+
+def append_data_to(file_to_save, data):
+    with open(file_to_save, "a") as file:
+            file.write("%d %d\n" % (data[0], data[1]))
