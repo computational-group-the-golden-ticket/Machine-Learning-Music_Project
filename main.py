@@ -47,7 +47,8 @@ def get_last_epoch(model_directory):
     files = [file for file in os.listdir(model_directory) if '.p' in file]
     # Function that go over a string and create in a list all individual
     #   numbers and then return all of them joined as a string.
-    get_number = (lambda string: "".join(list(filter(lambda c: c.isdigit(), string))))
+    get_number = (lambda string: "".join(list(filter(lambda c: c.isdigit(),
+                                                     string))))
     # Map the get_number over all the names and return them as integers
     epochs = list(map(lambda string: int(get_number(string)), files))
     epochs.append(0)  # Append 0 in case of void list
@@ -55,7 +56,9 @@ def get_last_epoch(model_directory):
 
 
 if __name__ == '__main__':
-    model_directory = "output"
+    # Directory in which the parameters that have been calculated for the model
+    #  are saved.
+    model_directory = "Scale/output"
     pcs = multi_training.loadPieces("Scale")
 
     start = get_last_epoch(model_directory)
