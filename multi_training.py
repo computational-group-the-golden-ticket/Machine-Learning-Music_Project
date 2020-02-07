@@ -92,8 +92,8 @@ def train(model, pieces, i):
     #   as will be expected for this type of problem, in which changing a note
     #   can produce models with the same quality.
     # Choosing parameters depending on the iteration.
-    if i % 800 == 0:
-        optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    if i > 600:
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-12)
     else:
         optimizer = torch.optim.Adam(model.parameters())
 
@@ -146,7 +146,7 @@ def trainPiece(model, pieces, epochs, music_type_dir, start=0):
         model.load_state_dict(checkpoint['model_state_dict'])
         start = checkpoint['epoch']
         error = checkpoint['loss']
-        # model.eval()
+        model.eval()
 
     for i in range(start, start + epochs):
         if stopflag[0]:
