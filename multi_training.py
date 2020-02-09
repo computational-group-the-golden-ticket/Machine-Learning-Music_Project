@@ -153,7 +153,7 @@ def trainPiece(model, pieces, epochs, start=0):
 
             # noteStateMatrixTomidi expect numpy array inputs
             init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
-            seed_tensor = xOpt[0].cuda()
+            seed_tensor = xIpt[0].cuda()
             # Input is tensor, int
             predict_notes = model(seed_tensor, batch_len)
             predict_notes = numpy.array(predict_notes)
