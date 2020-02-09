@@ -159,9 +159,13 @@ def trainPiece(model, pieces, epochs, start=0):
             predict_notes = model(seed_tensor, batch_len)
             predict_notes = numpy.array(predict_notes)
 
+<<<<<<< HEAD
             cpu_tensor = predict_notes
 
             dummy_notes = (init_notes, cpu_tensor)
+=======
+            dummy_notes = (init_notes, predict_notes)
+>>>>>>> 1036bf9edbac9b4be1fb2c3399d0414323dc652e
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
                                   'output/sample{}'.format(i))
 
