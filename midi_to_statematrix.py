@@ -3,8 +3,8 @@ import torch
 
 # In this range a map is made from number to note. Therefore, there are 78
 #  notes; this values are defined as global variables.
-lowerBound = 24
-upperBound = 102
+lowerBound = 62
+upperBound = 78
 
 
 def midiToNoteStateMatrix(midifile):
