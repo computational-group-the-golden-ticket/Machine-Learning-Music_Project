@@ -121,7 +121,7 @@ class PitchModel(BasicModel):
         shouldPlay = threshold < x[0]
         shouldArtic = shouldPlay * (threshold < x[1])
 
-        return torch.Tensor([shouldPlay, shouldArtic], device='cuda')
+        return torch.Tensor([shouldPlay, shouldArtic]).to("cuda")
 
     def forward(self, x, *args, **kwargs):
         # This call the forward specified in BasicModel.
@@ -224,7 +224,7 @@ class BiaxialRNNModel(nn.Module):
         #  the only thing that we have is silence, then a silence note
         #  is added.
         start_note_values = torch.zeros(1, last_output.shape[1], 2,
-                                        requires_grad=False, device='cuda')
+                                        requires_grad=False).to("cuda")
 
         # This is the matrix that represents the notes to be predicted. The
         #   last dim in note is erased again thanks to the fact that that this
@@ -257,7 +257,7 @@ class BiaxialRNNModel(nn.Module):
 
         hidden_time = self.time_model(input_mat)
 
-        last_note_values = torch.Tensor([0, 0], device='cuda')
+        last_note_values = torch.Tensor([0, 0]).to('cuda')
         next_notes_step = []  # list to append the new now generated
         for i in range(hidden_time.shape[1]):
             note_input = torch.cat([hidden_time[0][i], last_note_values])
@@ -282,7 +282,7 @@ class BiaxialRNNModel(nn.Module):
             note_state_matrix.append(last_step)
 
             last_step = noteStateSingleToInputForm(last_step, i)
-            last_step = torch.Tensor(last_step, device='cuda')
+            last_step = torch.Tensor(last_step).to("cuda")
 
         return note_state_matrix
 
