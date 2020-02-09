@@ -95,8 +95,8 @@ def train(model, pieces):
 
     # Get a part of the song, for more details see the function.
     input_mat, output_mat = getPieceBatch(pieces)
-    input_mat = input_mat.gpu()
-    output_mat = output_mat.gpu()
+    input_mat = input_mat.cuda()
+    output_mat = output_mat.cuda()
 
     # Run forward model for the data
     output = model((input_mat, output_mat), training=True)
