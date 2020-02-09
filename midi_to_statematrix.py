@@ -3,8 +3,8 @@ import torch
 
 # In this range a map is made from number to note. Therefore, there are 78
 #  notes; this values are defined as global variables.
-lowerBound = 24
-upperBound = 102
+lowerBound = 62
+upperBound = 78
 
 
 def midiToNoteStateMatrix(midifile):
@@ -79,8 +79,9 @@ def midiToNoteStateMatrix(midifile):
                 if evt.type == 'note_on':
                     # If not is not in the range of interest then pass
                     if evt.note < lowerBound or evt.note >= upperBound:
-                        print("Note {} at time {} out of bounds \
-                            (ignoring)".format(evt.note, time))
+                        # print("Note {} at time {} out of bounds \
+                            # (ignoring)".format(evt.note, time))
+                        pass
                     else:
                         if evt.type == 'note_off' or evt.velocity == 0:
                             # Substract lower bound for indexing in the list
