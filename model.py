@@ -38,7 +38,7 @@ class BasicModel(nn.Module):
                              nn.LSTM(last_output_size, layer_sizes[i]))
             last_output_size = layer_sizes[i]
 
-    def init_hidden(self, batch_size, to_cuda=False):
+    def init_hidden(self, batch_size, to_cuda=True):
         """
         This routine initialize the the hiddden states of all the stacked
         layers, remember each stack layers communicate with itself in the next
@@ -67,7 +67,7 @@ class BasicModel(nn.Module):
 
         return hidden_states
 
-    def forward(self, x, to_cuda=False):
+    def forward(self, x, to_cuda=True):
         """
         This method implements the general forward for a stack lstm neuronal
           network; with the different layers already defined.

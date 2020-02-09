@@ -95,12 +95,14 @@ def train(model, pieces):
 
     # Get a part of the song, for more details see the function.
     input_mat, output_mat = getPieceBatch(pieces)
+    input_mat = input_mat.gpu()
+    output_mat = output_mat.gpu()
 
     # Run forward model for the data
     output = model((input_mat, output_mat), training=True)
 
     active_notes = torch.unsqueeze(output_mat[:, 1:, :, 0], dim=3)
-    mask = torch.cat([torch.ones_like(active_notes), active_notes], dim=3)
+    mask = torch.cat([torch.ones_like(active_notes, device='cuda'), active_notes], dim=3)
 
     output = mask * output
 
@@ -151,10 +153,14 @@ def trainPiece(model, pieces, epochs, start=0):
 
             # noteStateMatrixTomidi expect numpy array inputs
             init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
-            predict_notes = model(xIpt[0], batch_len)  # Input is tensor, int
+            seed_tensor = xOpt[0].cuda()
+            # Input is tensor, int
+            predict_notes = model(seed_tensor, batch_len)
             predict_notes = numpy.array(predict_notes)
 
-            dummy_notes = (init_notes, predict_notes)
+            cpu_tensor = predict_notes.cpu()
+
+            dummy_notes = (init_notes, cpu_tensor)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
                                   'output/sample{}'.format(i))
 
