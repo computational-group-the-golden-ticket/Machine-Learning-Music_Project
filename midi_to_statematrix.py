@@ -79,8 +79,9 @@ def midiToNoteStateMatrix(midifile):
                 if evt.type == 'note_on':
                     # If not is not in the range of interest then pass
                     if evt.note < lowerBound or evt.note >= upperBound:
-                        print("Note {} at time {} out of bounds \
-                            (ignoring)".format(evt.note, time))
+                        # print("Note {} at time {} out of bounds \
+                            # (ignoring)".format(evt.note, time))
+                        pass
                     else:
                         if evt.type == 'note_off' or evt.velocity == 0:
                             # Substract lower bound for indexing in the list
