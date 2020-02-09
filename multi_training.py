@@ -8,9 +8,9 @@ import signal
 import torch
 
 # Number of examples to be sampled in the minimization.
-batch_width = 10
+batch_width = 2
 # Length of each sequence; the batch are desired to contain 8 bars.
-batch_len = 16 * 8
+batch_len = 16 * 4
 # Interval between possible start locations; this is the number of notes that
 #   can be resolved in a bar.
 division_len = 16
@@ -77,7 +77,7 @@ def NLLLoss(source, target):
     return loss
 
 
-def train(model, pieces):
+def train(model, pieces, i):
     # This implemnes the Negative log likelihood function in order to be
     #  minimized; "sum" option sums all the components of the tensor into a
     #  scalar.
@@ -91,7 +91,11 @@ def train(model, pieces):
     #   2015). Between them it is the fact that is good for non-stationary
     #   as will be expected for this type of problem, in which changing a note
     #   can produce models with the same quality.
-    optimizer = torch.optim.Adam(model.parameters())
+    # Choosing parameters depending on the iteration.
+    if i > 600:
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-12)
+    else:
+        optimizer = torch.optim.Adam(model.parameters())
 
     # Get a part of the song, for more details see the function.
     input_mat, output_mat = getPieceBatch(pieces)
@@ -123,7 +127,7 @@ def train(model, pieces):
     return loss
 
 
-def trainPiece(model, pieces, epochs, start=0):
+def trainPiece(model, pieces, epochs, music_type_dir, start=0):
     stopflag = [False]
 
     def signal_handler(signame, sf):
@@ -131,20 +135,34 @@ def trainPiece(model, pieces, epochs, start=0):
 
     old_handler = signal.signal(signal.SIGINT, signal_handler)
 
+    # File to save iteration and loss done
+    file_to_save = "iter_vs_loss.txt"
+
+    save_output_dir = music_type_dir + "/output"
+    os.makedirs(save_output_dir, exist_ok=True)
+
+    if start > 0:
+        checkpoint = torch.load(save_output_dir + '/params{}.pt'.format(start))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        start = checkpoint['epoch']
+        error = checkpoint['loss']
+        model.eval()
+
     for i in range(start, start + epochs):
         if stopflag[0]:
             break
 
         # Making the training for each epoch
-        error = train(model, pieces)
+        error = train(model, pieces, i)
 
+        append_data_to(file_to_save, [i, error])
         # Each 100 epochs print the error
-        if i % 100 == 0:
+        if i % 1 == 0:
             print("epoch {}, error={}".format(i, error))
 
         # This saves the model each 100 if less than 1000 epochs and 500 epochs
         #   after this
-        if i % 500 == 0 or (i % 100 == 0 and i < 1000):
+        if i % 500 == 0 or (i % 1 == 0 and i < 1000):
             # This Choose the seed for the predcition, and to make a
             #   predicition to see how the net is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
@@ -154,11 +172,14 @@ def trainPiece(model, pieces, epochs, start=0):
             predict_notes = model(xIpt[0], batch_len)  # Input is tensor, int
             predict_notes = numpy.array(predict_notes)
 
+            # Save samples created in save_output_dir
             dummy_notes = (init_notes, predict_notes)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
-                                  'output/sample{}'.format(i))
+                                  save_output_dir + '/sample{}'.format(i))
 
-            # Save the model
-            torch.save(model.state_dict(), 'output/params{}.p'.format(i))
+            # Save the model with dummy name in save_output_dir
+            dummy_name = save_output_dir + '/params{}.pt'.format(i)
+            torch.save({'epoch': i, 'model_state_dict': model.state_dict(),
+                        'loss': error}, dummy_name)
 
     signal.signal(signal.SIGINT, old_handler)

@@ -2,6 +2,8 @@
 import torch
 import model as m
 import multi_training
+from midi_to_statematrix import *
+import numpy as np
 
 
 def test_time_model():
@@ -48,7 +50,8 @@ def test_predict_one_step_model():
     print(model)
 
     out = model(data)  # Done in order to print
-    
+
+
 def test_predict_n_step_model():
     pcs = multi_training.loadPieces("Train_data")
     data, _ = multi_training.getPieceSegment(pcs)
@@ -68,7 +71,9 @@ def main():
     # test_pitch_model()
     # test_training_model()
     # test_predict_one_step_model()
-    test_predict_n_step_model()
+    # test_predict_n_step_model()
+    matrix = midiToNoteStateMatrix("Scale/Scale.mid")
+    print(np.argmax(matrix[0], axis=0))
 
 
 if __name__ == '__main__':

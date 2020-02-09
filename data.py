@@ -31,6 +31,13 @@ def buildContext(state):
 
 
 def buildBeat(time):
+    """
+    The module class 64 of time (numbers time%64) are represented in binary
+      representation, changint the 0's by ones, this in order to be more
+      suitable to affec the result in the weight matrixes to be determined.
+    This in fact is a binary representation of the time withing the time for
+      the note played or hold at a given time.
+    """
     return [2 * x - 1 for x in [time % 2, (time // 2) % 2, (time // 4) % 2,
                                 (time // 8) % 2]]
 
@@ -52,7 +59,10 @@ def noteInputForm(note, state, context, beat):
 
 
 def noteStateSingleToInputForm(state, time):
+    # Construct binary representation of time in the bar.
     beat = buildBeat(time)
+    # This will crate a list of the 25 nearby notes to the actual one in time, 
+    #   this ones say if the note was played or holded.
     context = buildContext(state)
     return [noteInputForm(note, state, context, beat)
             for note in range(len(state))]
@@ -65,3 +75,12 @@ def noteStateMatrixToInputForm(statematrix):
     inputform = [noteStateSingleToInputForm(state, time)
                  for time, state in enumerate(statematrix)]
     return inputform
+
+
+###########################################################################
+# Input output functions
+###########################################################################
+
+def append_data_to(file_to_save, data):
+    with open(file_to_save, "a") as file:
+        file.write("%d %d\n" % (data[0], data[1]))
