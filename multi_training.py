@@ -151,7 +151,6 @@ def trainPiece(model, pieces, epochs, start=0):
             #   predicition to see how the net is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            print("here")
             # noteStateMatrixTomidi expect numpy array inputs
             init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
             seed_tensor = xIpt[0].cuda()
