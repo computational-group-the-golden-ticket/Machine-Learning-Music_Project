@@ -139,7 +139,6 @@ def trainPiece(model, pieces, epochs, music_type_dir, start=0):
     file_to_save = "iter_vs_loss.txt"
 
     save_output_dir = music_type_dir + "/output"
-    os.makedirs(save_output_dir, exist_ok=True)
 
     if start > 0:
         checkpoint = torch.load(save_output_dir + '/params{}.pt'.format(start))

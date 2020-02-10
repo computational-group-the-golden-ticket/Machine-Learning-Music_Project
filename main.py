@@ -59,6 +59,7 @@ if __name__ == '__main__':
     # Directory in which the parameters that have been calculated for the model
     #  are saved.
     model_directory = "Scale/output"
+    os.makedirs(model_directory, exist_ok=True)
     pcs = multi_training.loadPieces("Scale")
 
     start = get_last_epoch(model_directory)
