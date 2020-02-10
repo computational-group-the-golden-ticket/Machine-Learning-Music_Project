@@ -174,7 +174,7 @@ class BiaxialRNNModel(nn.Module):
         self.pitch_model = PitchModel(self.time_model.layer_sizes[-1] + 2,
                                       p_layer_sizes)
 
-    def __train(self, x):
+    def local_train(self, x):
         """
         This forward is basicaly the implmentation on detail of what was said
           in te description of the class.
@@ -288,7 +288,7 @@ class BiaxialRNNModel(nn.Module):
 
     def forward(self, x, n=1, training=False):
         if training:
-            return self.__train(x)
+            return self.local_train(x)
         else:
             return self.predict_n_steps(x, n=n)
 
