@@ -174,4 +174,9 @@ def trainPiece(model, pieces, epochs, save_output_dir, start=0):
             # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
 
+            # Save the model with dummy name in save_output_dir
+            dummy_name = save_output_dir + '/params{}.pt'.format(i)
+            torch.save({'epoch': i, 'model_state_dict': model.state_dict(),
+                        'loss': error}, dummy_name)
+
     signal.signal(signal.SIGINT, old_handler)
