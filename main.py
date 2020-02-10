@@ -58,7 +58,7 @@ def get_last_epoch(model_directory):
 if __name__ == '__main__':
     # Directory in which the parameters that have been calculated for the model
     #  are saved.
-    music_type_dir = "Scale2"
+    music_type_dir = "Scale"
     save_output_dir = music_type_dir + "/output"
     os.makedirs(save_output_dir, exist_ok=True)
 
