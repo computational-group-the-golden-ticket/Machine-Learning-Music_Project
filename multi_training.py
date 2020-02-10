@@ -10,7 +10,7 @@ import torch
 # Number of examples to be sampled in the minimization.
 batch_width = 10
 # Length of each sequence; the batch are desired to contain 8 bars.
-batch_len = 16 * 4
+batch_len = 16 * 8
 # Interval between possible start locations; this is the number of notes that
 #   can be resolved in a bar.
 division_len = 16
@@ -125,13 +125,20 @@ def train(model, pieces):
     return loss
 
 
-def trainPiece(model, pieces, epochs, start=0):
+def trainPiece(model, pieces, epochs, save_output_dir, start=0):
     stopflag = [False]
 
     def signal_handler(signame, sf):
         stopflag[0] = True
 
     old_handler = signal.signal(signal.SIGINT, signal_handler)
+
+    if start > 0:
+        checkpoint = torch.load(save_output_dir + '/params{}.pt'.format(start))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        start = checkpoint['epoch']
+        error = checkpoint['loss']
+        model.train(True)
 
     for i in range(start, start + epochs):
         if stopflag[0]:
@@ -167,5 +174,10 @@ def trainPiece(model, pieces, epochs, start=0):
 
             # Save the model
             torch.save(model.state_dict(), 'output/params{}.p'.format(i))
+
+            # Save the model with dummy name in save_output_dir
+            dummy_name = save_output_dir + '/params{}.pt'.format(i)
+            torch.save({'epoch': i, 'model_state_dict': model.state_dict(),
+                        'loss': error}, dummy_name)
 
     signal.signal(signal.SIGINT, old_handler)
