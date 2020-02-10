@@ -125,7 +125,7 @@ def train(model, pieces):
     return loss
 
 
-def trainPiece(model, pieces, epochs, start=0):
+def trainPiece(model, pieces, epochs, save_output_dir, start=0):
     stopflag = [False]
 
     def signal_handler(signame, sf):

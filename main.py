@@ -57,7 +57,7 @@ def get_last_epoch(model_directory):
 if __name__ == '__main__':
     # Directory in which the parameters that have been calculated for the model
     #  are saved.
-    model_directory = "Scale/output"
+    model_directory = "output"
     os.makedirs(model_directory, exist_ok=True)
     pcs = multi_training.loadPieces("Scale")
 
@@ -66,4 +66,4 @@ if __name__ == '__main__':
     m = model.BiaxialRNNModel([300, 300], [100, 50])
     m.cuda()
 
-    multi_training.trainPiece(m, pcs, 10000, "Scale", start)
+    multi_training.trainPiece(m, pcs, 10000, model_directory, start)
