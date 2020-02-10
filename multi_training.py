@@ -145,7 +145,7 @@ def trainPiece(model, pieces, epochs, music_type_dir, start=0):
         model.load_state_dict(checkpoint['model_state_dict'])
         start = checkpoint['epoch']
         error = checkpoint['loss']
-        # model.eval()
+        model.train(True)
 
     for i in range(start, start + epochs):
         if stopflag[0]:

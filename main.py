@@ -58,11 +58,13 @@ def get_last_epoch(model_directory):
 if __name__ == '__main__':
     # Directory in which the parameters that have been calculated for the model
     #  are saved.
-    model_directory = "Scale/output"
-    os.makedirs(model_directory, exist_ok=True)
-    pcs = multi_training.loadPieces("Scale")
+    music_type_dir = "Scale"
+    save_output_dir = music_type_dir + "/output"
+    os.makedirs(save_output_dir, exist_ok=True)
 
-    start = get_last_epoch(model_directory)
+    # Create and evaluate model
+    pcs = multi_training.loadPieces("Scale2")
+    start = get_last_epoch(save_output_dir)
 
     m = model.BiaxialRNNModel([300, 300], [100, 50])
 
