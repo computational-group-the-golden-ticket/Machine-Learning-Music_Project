@@ -133,6 +133,12 @@ def trainPiece(model, pieces, epochs, start=0):
 
     old_handler = signal.signal(signal.SIGINT, signal_handler)
 
+    if start > 0:
+        checkpoint = torch.load(save_output_dir + '/params{}.pt'.format(start))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        start = checkpoint['epoch']
+        error = checkpoint['loss']
+
     for i in range(start, start + epochs):
         if stopflag[0]:
             break
