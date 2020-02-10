@@ -14,9 +14,6 @@
 !cat colab_code.py
 
 # cell 3
-%mkdir output
-
-# cell 4
 from midi_to_statematrix import *
 
 import multi_training

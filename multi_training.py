@@ -10,7 +10,7 @@ import torch
 # Number of examples to be sampled in the minimization.
 batch_width = 10
 # Length of each sequence; the batch are desired to contain 8 bars.
-batch_len = 16 * 4
+batch_len = 16 * 8
 # Interval between possible start locations; this is the number of notes that
 #   can be resolved in a bar.
 division_len = 16
