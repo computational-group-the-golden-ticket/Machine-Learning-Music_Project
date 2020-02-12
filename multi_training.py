@@ -1,0 +1,178 @@
+import os
+import random
+from midi_to_statematrix import *
+from data import *
+import numpy
+import signal
+
+import torch
+
+# Number of examples to be sampled in the minimization.
+batch_width = 10
+# Length of each sequence; the batch are desired to contain 8 bars.
+batch_len = 16 * 8
+# Interval between possible start locations; this is the number of notes that
+#   can be resolved in a bar.
+division_len = 16
+
+
+def loadPieces(dirpath):
+
+    # Make a dicitonary to load all pieces
+    pieces = {}
+
+    # For over the file in  driectory to verify if they are midi files
+    for fname in os.listdir(dirpath):
+        # I not midi file try with the next
+        if fname[-4:] not in ('.mid', '.MID'):
+            continue
+
+        # Save name without .mid termination
+        name = fname[:-4]
+
+        # Transform the midi song to data as indicated in
+        #   midiToNoteStateMatrix in midi_to_statematrix.py
+        outMatrix = midiToNoteStateMatrix(os.path.join(dirpath, fname))
+        # If this is not the case, it is upload because it has several possible
+        #   examples
+        if len(outMatrix) < batch_len:
+            continue
+        pieces[name] = outMatrix
+
+        # Load info
+        print("Loaded {}".format(name))
+
+    return pieces
+
+
+def getPieceSegment(pieces):
+    # Choose a piece uploaded; all the pieces are assign with the same
+    #   probability.
+    piece_output = random.choice(list(pieces.values()))
+    # Choose a inintial position in a random bar.
+    start = random.randrange(0, len(piece_output) - batch_len, division_len)
+    # Take a segment of batch_len size; this represent batch_len times
+    #   the duration of the shortest possible note.
+    seg_out = piece_output[start:start + batch_len]
+    # This will change the last dimension of seg_out in order to give to each
+    #  note context about the notes played and hold in the surrounding times
+    #  as well as other parameters.
+    seg_in = noteStateMatrixToInputForm(seg_out)
+
+    return seg_in, seg_out
+
+
+def getPieceBatch(pieces):
+    # The input and oputut are copied in a a tuple, each batch_width times in
+    #   the following way i = (seg_in, ..., seg_in) and o = (seg_out, ....,
+    #   seg_out).
+    i, o = zip(*[getPieceSegment(pieces) for _ in range(batch_width)])
+    return torch.Tensor(i), torch.Tensor(o)
+
+
+def train(model, pieces):
+    # This implemnes the Negative log likelihood function in order to be
+    #  minimized; "sum" option sums all the components of the tensor into a
+    #  scalar.
+    loss_function = torch.nn.BCELoss(reduction='sum')
+
+    # The problem adapt well to the benefits that are refered in (Adam et. al.,
+    #   2015). Between them it is the fact that is good for non-stationary
+    #   as will be expected for this type of problem, in which changing a note
+    #   can produce models with the same quality.
+    optimizer = torch.optim.Adam(model.parameters())
+
+    # Get a part of the song, for more details see the function.
+    input_mat, output_mat = getPieceBatch(pieces)
+    input_mat = input_mat.cuda()
+    output_mat = output_mat.cuda()
+
+    # Run forward model for the data in the training phase.
+    output = model((input_mat, output_mat), training=True)
+
+    # Make a layer of all the played
+    active_notes = torch.unsqueeze(output_mat[:, 1:, :, 0], dim=3)
+    # Concantenate layer of ones with all the played
+    mask = torch.cat([torch.ones_like(active_notes, device='cuda'),
+                      active_notes], dim=3)
+    output = mask * output
+
+    # Only count in time dimension from 1, as this can be possible ouputs
+    #  predicted by the before ones.
+    output_mat = output_mat[:, 1:]
+    output = torch.unsqueeze(output.reshape((-1, 1)), dim=1)
+    output_mat = torch.unsqueeze(output_mat.reshape((-1, 1)), dim=1)
+
+    # Calculate NLLLoss, gradients and actualizing parameters; the numbers are
+    #   pass to long, this ony works for long. Prediction is passed first,
+    #   expected probabilities are passed as second parameter.
+    output = output.reshape(output.shape[0])
+    output_mat = output_mat.reshape(output.shape[0])
+    loss = loss_function(output, output_mat)
+    # loss = loss_function(output.long(), output_mat.long())
+
+    loss.backward()
+    optimizer.step()
+
+    return loss
+
+
+def trainPiece(model, pieces, epochs, save_output_dir, start=0):
+    stopflag = [False]
+
+    def signal_handler(signame, sf):
+        stopflag[0] = True
+
+    old_handler = signal.signal(signal.SIGINT, signal_handler)
+
+    # Read the model in the case the star epoch is diffenet from 0.
+    if start > 0:
+        checkpoint = torch.load(save_output_dir + '/params{}.pt'.format(start))
+        model.load_state_dict(checkpoint['model_state_dict'])
+        start = checkpoint['epoch']
+        error = checkpoint['loss']
+        # This sets the model to make the training, so this set up the layers
+        #   to be in training mode; drop out and batch normalization are
+        #   affected for example.
+        model.train(True)
+
+    for i in range(start, start + epochs):
+        if stopflag[0]:
+            break
+
+        # Making the training for each epoch
+        error = train(model, pieces)
+
+        # Each 100 epochs print the error
+        if i % 100 == 0:
+            print("epoch {}, error={}".format(i, error))
+
+        # This saves the model each 100 if less than 1000 epochs and 500 epochs
+        #   after this
+        if i % 500 == 0 or (i % 100 == 0 and i < 1000):
+            # This Choose the seed for the predcition, and to make a
+            #   predicition to see how the net is doing.
+            xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
+
+            # Retrieve all the info for the first value
+            init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
+            # Retrieve all the info for the first on/off value
+            seed_tensor = xIpt[0].cuda()
+            # By default the model is stting to predict, from the value on
+            #  the first note.
+            predict_notes = model(seed_tensor, batch_len)
+            predict_notes = numpy.array(predict_notes)
+
+            dummy_notes = (init_notes, predict_notes)
+            noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
+                                  'output/sample{}'.format(i))
+
+            # Save the model
+            torch.save(model.state_dict(), 'output/params{}.p'.format(i))
+
+            # Save the model with dummy name in save_output_dir
+            dummy_name = save_output_dir + '/params{}.pt'.format(i)
+            torch.save({'epoch': i, 'model_state_dict': model.state_dict(),
+                        'loss': error}, dummy_name)
+
+    signal.signal(signal.SIGINT, old_handler)
