@@ -253,6 +253,8 @@ class BiaxialRNNModel(nn.Module):
         return last_output
 
     def predict_one_step(self, x):
+        """ """
+        # This is qeuivalent to expand_di in the dimension 0.
         input_mat = torch.unsqueeze(x, dim=0)
 
         hidden_time = self.time_model(input_mat)
