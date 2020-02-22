@@ -154,12 +154,14 @@ def trainPiece(model, pieces, epochs, save_output_dir, start=0):
             #   predicition to see how the net is doing.
             xIpt, xOpt = map(torch.Tensor, getPieceSegment(pieces))
 
-            # Retrieve all the info for the first value
+            # It choose the first time in a random chosen example
+            #   (time->0, notes, 80)
             init_notes = numpy.expand_dims(xOpt[0].numpy(), axis=0)
-            # Retrieve all the info for the first on/off value
+            # It choose the first time in a random chosen example
+            #   (notes, 2)
             seed_tensor = xIpt[0].cuda()
-            # By default the model is stting to predict, from the value on
-            #  the first note.
+            # By default the model is set to predict, from the value on
+            #  on the first notes.
             predict_notes = model(seed_tensor, batch_len)
             predict_notes = numpy.array(predict_notes)
 
