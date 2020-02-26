@@ -38,6 +38,9 @@ class BasicModel(nn.Module):
                              nn.LSTM(last_output_size, layer_sizes[i]))
             last_output_size = layer_sizes[i]
 
+        # dropout
+        self.dropout = torch.nn.Dropout(p=0.5, inplace=False)
+
     def init_hidden(self, batch_size, to_cuda=True):
         """
         This routine initialize the the hiddden states of all the stacked
@@ -67,7 +70,7 @@ class BasicModel(nn.Module):
 
         return hidden_states
 
-    def forward(self, x, to_cuda=True):
+    def forward(self, x, to_cuda=True, training=True):
         """
         This method implements the general forward for a stack lstm neuronal
           network; with the different layers already defined.
@@ -80,6 +83,9 @@ class BasicModel(nn.Module):
         # Init the the last output variable to make explicit calculations
         last_output = x
 
+        if training:
+            last_output = self.dropout(last_output)
+
         # Do forward calculations passing through every lstm cell; thanks to
         #  the nn library each lstm1, ..., lstmN connect to itself in the other
         #  step; the gradient descent will be well mada thanks to the fact that
@@ -88,6 +94,9 @@ class BasicModel(nn.Module):
             lstm = self.__getattr__('lstm%d' % i)
 
             last_output, _ = lstm(last_output, (self.hidden[i], self.state[i]))
+
+            if training:
+                last_output = self.dropout(last_output)
 
         return last_output
 
@@ -255,7 +264,7 @@ class BiaxialRNNModel(nn.Module):
     def predict_one_step(self, x):
         input_mat = torch.unsqueeze(x, dim=0)
 
-        hidden_time = self.time_model(input_mat)
+        hidden_time = self.time_model(input_mat, training=False)
 
         last_note_values = torch.Tensor([0, 0]).to('cuda')
         next_notes_step = []  # list to append the new now generated
@@ -264,7 +273,7 @@ class BiaxialRNNModel(nn.Module):
             note_input = torch.unsqueeze(note_input, dim=0)
             note_input = torch.unsqueeze(note_input, dim=0)
 
-            probabilities = self.pitch_model(note_input)
+            probabilities = self.pitch_model(note_input, training=False)
             last_note_values = self.pitch_model.probabilities2notes(probabilities[0][0])
 
             next_notes_step.append([last_note_values[0].long().item(),
