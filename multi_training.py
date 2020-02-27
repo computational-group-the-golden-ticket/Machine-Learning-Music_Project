@@ -169,8 +169,9 @@ def trainPiece(model, pieces, epochs, save_output_dir, start=0):
 
             dummy_notes = (init_notes, cpu_tensor)
 
+            dummy_name = save_output_dir + '/params{}'.format(i)
             noteStateMatrixTomidi(numpy.concatenate(dummy_notes, axis=0),
-                                  'dropout/sample{}'.format(i))
+                                  dummy_name)
 
             # Save the model
             torch.save(model.state_dict(), 'dropout/params{}.p'.format(i))
