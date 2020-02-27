@@ -174,7 +174,8 @@ def trainPiece(model, pieces, epochs, save_output_dir, start=0):
                                   dummy_name)
 
             # Save the model
-            torch.save(model.state_dict(), 'dropout/params{}.p'.format(i))
+            dummy_name = save_output_dir + '/params{}.p'.format(i)
+            torch.save(model.state_dict(), dummy_name)
 
             # Save the model with dummy name in save_output_dir
             dummy_name = save_output_dir + '/params{}.pt'.format(i)
